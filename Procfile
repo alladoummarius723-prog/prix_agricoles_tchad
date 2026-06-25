@@ -1,0 +1,1 @@
+web: gunicorn prix_agricoles_tchad.wsgi --bind 0.0.0.0:$PORT
