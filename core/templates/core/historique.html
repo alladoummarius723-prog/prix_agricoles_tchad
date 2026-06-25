@@ -1,0 +1,61 @@
+{% extends 'core/base.html' %}
+{% block title %}Historique — AgriPrix Tchad{% endblock %}
+{% block content %}
+<div class="container">
+  <h1 class="page-title">📋 Historique des prévisions</h1>
+  <p class="page-sub">Toutes les prévisions effectuées via l'application web et par SMS.</p>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Produit</th>
+          <th>Marché</th>
+          <th>Mois</th>
+          <th>Prix prédit</th>
+          <th>Tendance</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in predictions %}
+        <tr>
+          <td style="font-family:'JetBrains Mono',monospace;font-size:.82rem">
+            {{ p.date_prediction|date:"d/m/Y H:i" }}
+          </td>
+          <td><strong>{{ p.produit|capfirst }}</strong></td>
+          <td>{{ p.marche }}</td>
+          <td>{{ p.mois }}/{{ p.annee }}</td>
+          <td style="font-family:'JetBrains Mono',monospace;font-weight:600">
+            {{ p.prix_predit|floatformat:0 }} FCFA/kg
+          </td>
+          <td>
+            <span class="stat-badge {% if p.tendance == 'hausse' %}badge-hausse{% elif p.tendance == 'baisse' %}badge-baisse{% else %}badge-stable{% endif %}">
+              {% if p.tendance == 'hausse' %}↑{% elif p.tendance == 'baisse' %}↓{% else %}→{% endif %}
+              {{ p.tendance|capfirst }}
+            </span>
+          </td>
+          <td>
+            {% if p.source == 'sms' %}
+            <span style="background:#FDF4E3;color:#C8860A;font-size:.75rem;padding:2px 8px;border-radius:99px;font-weight:600">📱 SMS</span>
+            {% elif p.source == 'api' %}
+            <span style="background:#EAF1FB;color:#1A5296;font-size:.75rem;padding:2px 8px;border-radius:99px;font-weight:600">🔌 API</span>
+            {% else %}
+            <span style="background:#E8F5EE;color:#1D7A4A;font-size:.75rem;padding:2px 8px;border-radius:99px;font-weight:600">🌐 Web</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" style="text-align:center;color:var(--texte-2);padding:2rem">
+            Aucune prévision effectuée pour le moment.
+            <a href="{% url 'predict' %}" style="color:var(--vert)">Faire une prévision →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

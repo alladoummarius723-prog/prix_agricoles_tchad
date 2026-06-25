@@ -1,0 +1,117 @@
+{% extends 'core/base.html' %}
+{% block title %}Guide SMS — AgriPrix Tchad{% endblock %}
+{% block content %}
+<div class="container">
+  <h1 class="page-title">📱 Accès par SMS</h1>
+  <p class="page-sub">Obtenez une prévision de prix directement par SMS, sans internet, avec Airtel ou Moov Africa.</p>
+
+  <div class="grid-2" style="margin-bottom:1.5rem">
+
+    <div class="card">
+      <div class="section-title"> Comment envoyer un SMS</div>
+
+      <div style="display:flex;flex-direction:column;gap:1rem;margin-top:.5rem">
+
+        <div style="display:flex;gap:1rem;align-items:flex-start">
+          <div style="background:var(--vert);color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">1</div>
+          <div>
+            <div style="font-weight:600;font-size:.9rem">Composez le numéro court</div>
+            <div style="font-size:2rem;font-weight:700;color:var(--vert);font-family:'JetBrains Mono',monospace">1234</div>
+            <div style="font-size:.8rem;color:var(--texte-2)">Disponible sur Airtel et Moov Africa Tchad</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:1rem;align-items:flex-start">
+          <div style="background:var(--vert);color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">2</div>
+          <div>
+            <div style="font-weight:600;font-size:.9rem">Écrivez votre message</div>
+            <div style="margin-top:.4rem">
+              <span class="sms-code">PRIX [produit] [marché]</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:1rem;align-items:flex-start">
+          <div style="background:var(--vert);color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">3</div>
+          <div>
+            <div style="font-weight:600;font-size:.9rem">Recevez la réponse</div>
+            <div style="font-size:.85rem;color:var(--texte-2);margin-top:.25rem">
+              En moins de 30 secondes, vous recevrez la prévision de prix pour le mois en cours.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title"> Exemples de messages</div>
+      <div style="display:flex;flex-direction:column;gap:.75rem;margin-top:.5rem">
+
+        {% for ex in ""|make_list %}{% endfor %}
+
+        <div class="sms-box">
+          <div style="font-size:.78rem;color:var(--texte-2);margin-bottom:.3rem">Vous envoyez :</div>
+          <div class="sms-code">PRIX MIL ABECHE</div>
+          <div style="font-size:.78rem;color:var(--texte-2);margin:.4rem 0 .3rem">Vous recevez :</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.82rem;background:rgba(200,134,10,.08);padding:.6rem;border-radius:6px;line-height:1.8">
+            Mil - Abeché<br>
+            Prix prévu: 215 FCFA/kg<br>
+            Tendance: ↑ 5%<br>
+            Saison sèche
+          </div>
+        </div>
+
+        <div class="sms-box">
+          <div style="font-size:.78rem;color:var(--texte-2);margin-bottom:.3rem">Pour la liste des marchés :</div>
+          <div class="sms-code">MARCHES</div>
+        </div>
+
+        <div class="sms-box">
+          <div style="font-size:.78rem;color:var(--texte-2);margin-bottom:.3rem">Pour l'aide :</div>
+          <div class="sms-code">AIDE</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Produits disponibles -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title"> Produits disponibles</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:.5rem">
+        {% for prod in produits %}
+        <div style="display:flex;align-items:center;gap:.75rem;padding:.75rem;background:var(--gris-fond);border-radius:8px">
+          <span style="font-size:1.5rem">
+            {% if prod == 'mil' %}{% elif prod == 'sorgho' %}{% elif prod == 'mais' %}🌽{% else %}🍚{% endif %}
+          </span>
+          <div>
+            <div style="font-weight:600;font-size:.9rem">{{ prod|capfirst }}</div>
+            <div class="sms-code" style="font-size:.72rem;margin-top:2px">{{ prod|upper }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title"> Marchés disponibles (extrait)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem">
+        {% for marche in marches %}
+        <span style="background:var(--gris-fond);border:1px solid var(--gris-bord);padding:3px 10px;border-radius:99px;font-size:.78rem">
+          {{ marche }}
+        </span>
+        {% endfor %}
+        <span style="background:var(--vert-pale);border:1px solid var(--vert-cl);padding:3px 10px;border-radius:99px;font-size:.78rem;color:var(--vert)">
+          + 37 autres...
+        </span>
+      </div>
+      <div style="font-size:.78rem;color:var(--texte-2);margin-top:.75rem">
+        Envoyez <span class="sms-code" style="font-size:.72rem">MARCHES</span> pour la liste complète
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

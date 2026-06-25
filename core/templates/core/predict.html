@@ -1,0 +1,222 @@
+{% extends 'core/base.html' %}
+{% block title %}Prévision des prix — AgriPrix Tchad{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="page-title">🔮 Prévision des prix</h1>
+  <p class="page-sub">Sélectionnez un produit, un marché et un horizon temporel pour obtenir une prévision de prix.</p>
+
+  <div class="grid-2">
+
+    <!-- Formulaire -->
+    <div class="card">
+      <div class="section-title">Paramètres de prévision</div>
+
+      {% if erreur %}
+      <div style="background:#FDECEA;border:1px solid #E74C3C;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.875rem;color:#C0392B">
+        ⚠️ {{ erreur }}
+      </div>
+      {% endif %}
+
+      <form method="POST" action="{% url 'predict' %}">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label>🌾 Produit</label>
+          <select name="produit" class="form-control" required>
+            <option value="">— Sélectionner un produit —</option>
+            {% for prod in produits %}
+            <option value="{{ prod }}"
+              {% if resultat and resultat.produit == prod %}selected{% endif %}>
+              {{ prod|capfirst }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>🏪 Marché</label>
+          <select name="marche" class="form-control" required>
+            <option value="">— Sélectionner un marché —</option>
+            {% for marche in marches %}
+            <option value="{{ marche }}"
+              {% if resultat and resultat.marche == marche %}selected{% endif %}>
+              {{ marche }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label>📅 Mois</label>
+            <select name="mois" class="form-control">
+              {% for num, nom in mois_liste %}
+              <option value="{{ num }}"
+                {% if num == mois_actuel %}selected{% endif %}>
+                {{ nom }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>📅 Année</label>
+            <select name="annee" class="form-control">
+              {% for annee in annees %}
+              <option value="{{ annee }}"
+                {% if annee == annee_actuelle %}selected{% endif %}>
+                {{ annee }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%">
+          🔮 Calculer la prévision
+        </button>
+      </form>
+
+      <!-- Aide SMS -->
+      <div class="sms-box" style="margin-top:1.5rem">
+        <div style="font-size:.85rem;font-weight:600;color:var(--or);margin-bottom:.5rem">
+          📱 Même résultat par SMS
+        </div>
+        <div style="font-size:.82rem;color:var(--texte-2);margin-bottom:.4rem">
+          Envoyez au <strong>1234</strong> (Airtel / Moov) :
+        </div>
+        <div class="sms-code">PRIX [PRODUIT] [MARCHÉ]</div>
+        <div style="font-size:.78rem;color:var(--texte-2);margin-top:.4rem">
+          Ex : <span class="sms-code">PRIX MIL ABECHE</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Résultat -->
+    <div>
+      {% if resultat and not resultat.erreur %}
+      <div class="result-box">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+          <div>
+            <div style="font-size:.85rem;color:var(--texte-2);font-weight:500">
+              {{ resultat.produit_fr }} — {{ resultat.marche }}
+            </div>
+            <div class="result-prix">{{ resultat.prix_predit|floatformat:0 }} <span style="font-size:1.2rem">FCFA/kg</span></div>
+            <div class="result-fourchette">
+              Fourchette : {{ resultat.prix_min|floatformat:0 }} — {{ resultat.prix_max|floatformat:0 }} FCFA/kg
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div class="stat-badge {% if resultat.tendance == 'hausse' %}badge-hausse{% elif resultat.tendance == 'baisse' %}badge-baisse{% else %}badge-stable{% endif %}"
+                 style="font-size:1rem;padding:6px 14px">
+              {{ resultat.fleche }} {{ resultat.variation_pct|floatformat:1 }}%
+            </div>
+            <div style="font-size:.78rem;color:var(--texte-2);margin-top:.4rem">
+              vs mois précédent
+            </div>
+          </div>
+        </div>
+
+        <!-- Détails -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-top:1.25rem">
+          <div style="background:rgba(255,255,255,.7);border-radius:8px;padding:.75rem;text-align:center">
+            <div style="font-size:.75rem;color:var(--texte-2)">Prix actuel</div>
+            <div style="font-weight:700;font-family:'JetBrains Mono',monospace">{{ resultat.prix_actuel|floatformat:0 }} F</div>
+          </div>
+          <div style="background:rgba(255,255,255,.7);border-radius:8px;padding:.75rem;text-align:center">
+            <div style="font-size:.75rem;color:var(--texte-2)">Saison</div>
+            <div style="font-weight:700">{{ resultat.saison|capfirst }}</div>
+          </div>
+          <div style="background:rgba(255,255,255,.7);border-radius:8px;padding:.75rem;text-align:center">
+            <div style="font-size:.75rem;color:var(--texte-2)">Fiabilité</div>
+            <div style="font-weight:700">{{ resultat.fiabilite }}</div>
+          </div>
+        </div>
+
+        {% if resultat.marche_note %}
+        <div style="font-size:.78rem;color:var(--texte-2);margin-top:.75rem;padding:.5rem .75rem;background:rgba(200,134,10,.08);border-radius:6px">
+          ℹ️ {{ resultat.marche_note }}
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Graphique historique du produit -->
+      {% if resultat.tendances_json %}
+      <div class="card" style="margin-top:1.25rem">
+        <div class="section-title">📈 Tendance historique — {{ resultat.produit_fr }}</div>
+        <div style="position:relative;height:200px">
+          <canvas id="chartResultat"></canvas>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Format SMS équivalent -->
+      <div class="sms-box" style="margin-top:1.25rem">
+        <div style="font-size:.82rem;font-weight:600;margin-bottom:.5rem">📱 Réponse SMS équivalente</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.85rem;background:rgba(200,134,10,.1);padding:.75rem;border-radius:6px;line-height:1.8">
+          {{ resultat.produit_fr }} - {{ resultat.marche }}<br>
+          Prix prévu: {{ resultat.prix_predit|floatformat:0 }} FCFA/kg<br>
+          Tendance: {{ resultat.fleche }} {{ resultat.variation_pct|floatformat:0 }}%<br>
+          Saison: {{ resultat.saison|capfirst }}
+        </div>
+      </div>
+
+      {% elif resultat.erreur %}
+      <div class="card" style="border-color:#E74C3C">
+        <div style="color:#C0392B">⚠️ {{ resultat.erreur }}</div>
+      </div>
+      {% else %}
+      <div class="card" style="text-align:center;padding:3rem;color:var(--texte-2)">
+        <div style="font-size:3rem">🌾</div>
+        <div style="margin-top:1rem;font-size:.95rem">
+          Renseignez le formulaire pour obtenir une prévision de prix
+        </div>
+        <div style="font-size:.82rem;margin-top:.5rem">
+          Le modèle XGBoost prédit le prix du mois suivant avec une précision de ~87%
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if resultat and resultat.tendances_json and resultat.tendances_json != '{}' %}
+<script>
+const td = {{ resultat.tendances_json|safe }};
+if (td && td.labels) {
+  const ctx = document.getElementById('chartResultat').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: td.labels,
+      datasets: [{
+        label: 'Prix historique',
+        data: td.prix,
+        borderColor: td.couleur,
+        backgroundColor: td.couleur + '22',
+        borderWidth: 2,
+        pointRadius: 2,
+        tension: 0.3,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => c.parsed.y + ' FCFA/kg' } }
+      },
+      scales: {
+        x: { ticks: { maxTicksLimit: 10, font: { size: 10 } } },
+        y: { ticks: { callback: v => v + ' F', font: { size: 10 } } }
+      }
+    }
+  });
+}
+</script>
+{% endif %}
+{% endblock %}

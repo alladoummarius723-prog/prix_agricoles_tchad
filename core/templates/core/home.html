@@ -1,0 +1,232 @@
+{% extends 'core/base.html' %}
+{% block title %}Tableau de bord — AgriPrix Tchad{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <!-- En-tête -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:1rem">
+    <div>
+      <h1 class="page-title">Tableau de bord</h1>
+      <p class="page-sub">Tendances des prix des céréales sur les marchés tchadiens</p>
+    </div>
+    <a href="{% url 'predict' %}" class="btn btn-primary">
+      Faire une prévision
+    </a>
+  </div>
+
+  <!-- Cartes statistiques -->
+  <div class="grid-4" style="margin-bottom:1.75rem">
+    {% for s in stats %}
+    <div class="stat-card">
+      <div class="stat-label">{{ s.produit|capfirst }}</div>
+      <div class="stat-value" style="color:
+        {% if s.produit == 'mil' %}#7F77DD
+        {% elif s.produit == 'sorgho' %}#1D9E75
+        {% elif s.produit == 'mais' %}#C8860A
+        {% else %}#1A5296{% endif %}">
+        {{ s.prix_moyen|floatformat:0 }} <span style="font-size:1rem;font-weight:400">FCFA/kg</span>
+      </div>
+      <span class="stat-badge {% if s.tendance == 'hausse' %}badge-hausse{% elif s.tendance == 'baisse' %}badge-baisse{% else %}badge-stable{% endif %}">
+        {% if s.tendance == 'hausse' %}↑{% elif s.tendance == 'baisse' %}↓{% else %}→{% endif %}
+        {{ s.variation|floatformat:1 }}%
+      </span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Graphique principal tendances -->
+  <div class="card" style="margin-bottom:1.75rem">
+    <div class="section-title">
+      Évolution des prix — Historique & Prévisions
+      <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap" id="legend-produits">
+        {% for prod in produits %}
+        <button onclick="toggleProduit('{{ prod }}')"
+          id="btn-{{ prod }}"
+          style="font-size:.75rem;padding:3px 10px;border-radius:99px;border:1.5px solid;cursor:pointer;font-family:'Sora',sans-serif;font-weight:600;transition:all .2s;
+          {% if prod == 'mil' %}background:#F0EFFC;color:#7F77DD;border-color:#7F77DD
+          {% elif prod == 'sorgho' %}background:#E8F5EE;color:#1D9E75;border-color:#1D9E75
+          {% elif prod == 'mais' %}background:#FDF4E3;color:#C8860A;border-color:#C8860A
+          {% else %}background:#EAF1FB;color:#1A5296;border-color:#1A5296{% endif %}">
+          {{ prod|capfirst }}
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+    <div style="position:relative;height:320px">
+      <canvas id="chartTendances"></canvas>
+    </div>
+  </div>
+
+  <!-- Saisonnalité + infos -->
+  <div class="grid-2" style="margin-bottom:1.75rem">
+
+    <div class="card">
+      <div class="section-title">Saisonnalité mensuelle</div>
+      <div style="position:relative;height:220px">
+        <canvas id="chartSaisonnalite"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Informations système</div>
+      <div style="display:flex;flex-direction:column;gap:.75rem;margin-top:.5rem">
+        <div style="display:flex;justify-content:space-between;padding:.6rem .75rem;background:var(--gris-fond);border-radius:8px">
+          <span style="font-size:.85rem;color:var(--texte-2)">Marchés couverts</span>
+          <strong>{{ nb_marches }}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:.6rem .75rem;background:var(--gris-fond);border-radius:8px">
+          <span style="font-size:.85rem;color:var(--texte-2)">Prévisions effectuées</span>
+          <strong>{{ nb_predictions }}</strong>
+        </div>
+
+      </div>
+
+      <!-- Accès SMS -->
+      <div class="sms-box" style="margin-top:1.25rem">
+        <div style="font-size:.85rem;font-weight:600;margin-bottom:.5rem">Accès par SMS</div>
+        <div style="font-size:.82rem;color:var(--texte-2)">Envoyez un SMS au</div>
+        <div style="font-size:1.4rem;font-weight:700;color:var(--or);font-family:'JetBrains Mono',monospace">1234</div>
+        <div class="sms-code">PRIX MIL ABECHE</div>
+        <div style="font-size:.78rem;color:var(--texte-2);margin-top:.4rem">Airtel · Moov Africa · Tigo</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const TENDANCES = {{ tendances_json|safe }};
+const COULEURS  = {
+  mil: '#7F77DD', sorgho: '#1D9E75', mais: '#EF9F27', riz: '#378ADD'
+};
+const PRODUITS_ACTIFS = { mil: true, sorgho: true, mais: true, riz: true };
+
+// ── Graphique principal ────────────────────────────────────
+const ctxT = document.getElementById('chartTendances').getContext('2d');
+const datasets = [];
+
+for (const [prod, data] of Object.entries(TENDANCES)) {
+  // Courbe historique (trait plein)
+  datasets.push({
+    label:           data.label_fr,
+    data:            data.prix,
+    borderColor:     COULEURS[prod],
+    backgroundColor: COULEURS[prod] + '18',
+    borderWidth:     2.2,
+    pointRadius:     2,
+    pointHoverRadius:5,
+    tension:         0.3,
+    fill:            false,
+  });
+  // Courbe prévision (trait pointillé) — prolonge à partir du dernier point
+  if (data.previsions && data.previsions.length) {
+    datasets.push({
+      label:           data.label_fr + ' (prévision)',
+      data:            data.previsions,
+      borderColor:     COULEURS[prod],
+      backgroundColor: 'transparent',
+      borderWidth:     2,
+      borderDash:      [5, 4],
+      pointRadius:     3,
+      pointStyle:      'triangle',
+      tension:         0.3,
+      fill:            false,
+    });
+  }
+}
+
+// Fusionner labels historiques + labels prévision
+const firstProd = Object.values(TENDANCES)[0] || {};
+const labelsHist = firstProd.labels || [];
+const labelsPrev = firstProd.labels_prev || [];
+// Éviter les doublons
+const labelsAll = [...labelsHist, ...labelsPrev.filter(l => !labelsHist.includes(l))];
+const labels = labelsAll;
+const chartT = new Chart(ctxT, {
+  type: 'line',
+  data: { labels, datasets },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        callbacks: {
+          label: ctx => `${ctx.dataset.label} : ${ctx.parsed.y} FCFA/kg`
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: { maxTicksLimit: 12, font: { size: 11 } },
+        grid: { color: '#E5E9E3' }
+      },
+      y: {
+        ticks: {
+          callback: v => v + ' F',
+          font: { size: 11 }
+        },
+        grid: { color: '#E5E9E3' }
+      }
+    }
+  }
+});
+
+function toggleProduit(prod) {
+  PRODUITS_ACTIFS[prod] = !PRODUITS_ACTIFS[prod];
+  const btn = document.getElementById('btn-' + prod);
+  const ds  = chartT.data.datasets.find(d => d.label === TENDANCES[prod]?.label_fr);
+  if (ds) ds.hidden = !PRODUITS_ACTIFS[prod];
+  btn.style.opacity = PRODUITS_ACTIFS[prod] ? '1' : '0.4';
+  chartT.update();
+}
+
+// ── Graphique saisonnalité ─────────────────────────────────
+const ctxS = document.getElementById('chartSaisonnalite').getContext('2d');
+const moisLabels = ['Jan','Fév','Mar','Avr','Mai','Jui','Jul','Aoû','Sep','Oct','Nov','Déc'];
+
+// Calculer les prix moyens par mois depuis les données de tendances
+function calcSaisonnalite(prod) {
+  if (!TENDANCES[prod]) return Array(12).fill(null);
+  const parMois = Array(12).fill(null).map(() => []);
+  TENDANCES[prod].labels.forEach((label, i) => {
+    const mois = parseInt(label.split('-')[1]) - 1;
+    parMois[mois].push(TENDANCES[prod].prix[i]);
+  });
+  return parMois.map(arr => arr.length ? arr.reduce((a,b)=>a+b)/arr.length : null);
+}
+
+new Chart(ctxS, {
+  type: 'line',
+  data: {
+    labels: moisLabels,
+    datasets: Object.keys(TENDANCES).map(prod => ({
+      label:       TENDANCES[prod].label_fr,
+      data:        calcSaisonnalite(prod),
+      borderColor: COULEURS[prod],
+      borderWidth: 2,
+      pointRadius: 3,
+      tension:     0.4,
+      fill:        false,
+    }))
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+    scales: {
+      y: {
+        ticks: { callback: v => v + ' F', font: { size: 10 } },
+        grid: { color: '#E5E9E3' }
+      },
+      x: { grid: { color: '#E5E9E3' } }
+    }
+  }
+});
+</script>
+{% endblock %}

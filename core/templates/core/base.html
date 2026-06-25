@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}AgriPrix Tchad{% endblock %}</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --vert:      #1D7A4A;
+  --vert-cl:   #2AA660;
+  --vert-pale: #E8F5EE;
+  --or:        #C8860A;
+  --or-pale:   #FDF4E3;
+  --bleu:      #1A5296;
+  --rouge:     #C0392B;
+  --gris-fond: #F4F6F3;
+  --gris-bord: #DDE2DA;
+  --texte:     #1A2416;
+  --texte-2:   #4A5E44;
+  --blanc:     #FFFFFF;
+  --radius:    10px;
+  --shadow:    0 2px 12px rgba(0,0,0,.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Sora', sans-serif;
+  background: var(--gris-fond);
+  color: var(--texte);
+  min-height: 100vh;
+}
+/* ── NAV ── */
+nav {
+  background: var(--vert);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.nav-logo-icon {
+  font-size: 1.5rem;
+}
+.nav-links {
+  display: flex;
+  gap: 6px;
+  list-style: none;
+}
+.nav-links a {
+  color: rgba(255,255,255,.85);
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: .875rem;
+  font-weight: 500;
+  transition: background .2s;
+}
+.nav-links a:hover,
+.nav-links a.active {
+  background: rgba(255,255,255,.18);
+  color: #fff;
+}
+/* ── LAYOUT ── */
+.container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+.page-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--texte);
+  margin-bottom: .4rem;
+}
+.page-sub {
+  font-size: .9rem;
+  color: var(--texte-2);
+  margin-bottom: 2rem;
+}
+/* ── CARDS ── */
+.card {
+  background: var(--blanc);
+  border-radius: var(--radius);
+  border: 1px solid var(--gris-bord);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+}
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.25rem; }
+.grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 1.25rem; }
+/* ── STAT CARDS ── */
+.stat-card {
+  background: var(--blanc);
+  border-radius: var(--radius);
+  border: 1px solid var(--gris-bord);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow);
+}
+.stat-label { font-size: .78rem; color: var(--texte-2); font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+.stat-value { font-size: 1.8rem; font-weight: 700; margin: .25rem 0; font-family: 'JetBrains Mono', monospace; }
+.stat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+.badge-hausse { background: #FDECEA; color: var(--rouge); }
+.badge-baisse { background: #E8F5EE; color: var(--vert); }
+.badge-stable { background: #EEF2FF; color: #3B4BC8; }
+/* ── FORMS ── */
+.form-group { margin-bottom: 1.25rem; }
+.form-group label {
+  display: block;
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--texte);
+  margin-bottom: .4rem;
+}
+.form-control {
+  width: 100%;
+  padding: .65rem .9rem;
+  border: 1.5px solid var(--gris-bord);
+  border-radius: 8px;
+  font-family: 'Sora', sans-serif;
+  font-size: .9rem;
+  color: var(--texte);
+  background: var(--blanc);
+  transition: border-color .2s;
+  appearance: none;
+}
+.form-control:focus {
+  outline: none;
+  border-color: var(--vert);
+  box-shadow: 0 0 0 3px rgba(29,122,74,.12);
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: .7rem 1.6rem;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Sora', sans-serif;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-primary { background: var(--vert); color: #fff; }
+.btn-primary:hover { background: var(--vert-cl); transform: translateY(-1px); }
+.btn-secondary { background: var(--gris-bord); color: var(--texte); }
+/* ── RESULT BOX ── */
+.result-box {
+  background: linear-gradient(135deg, var(--vert-pale) 0%, #fff 100%);
+  border: 2px solid var(--vert-cl);
+  border-radius: 12px;
+  padding: 1.75rem;
+  margin-top: 1.5rem;
+}
+.result-prix {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: var(--vert);
+  font-family: 'JetBrains Mono', monospace;
+}
+.result-fourchette {
+  font-size: .85rem;
+  color: var(--texte-2);
+  margin-top: .25rem;
+}
+/* ── SECTION TITLES ── */
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--texte);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* ── SMS HIGHLIGHT ── */
+.sms-box {
+  background: var(--or-pale);
+  border: 1.5px solid var(--or);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+}
+.sms-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--or);
+  background: rgba(200,134,10,.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: inline-block;
+  margin: 4px 2px;
+}
+/* ── TABLE ── */
+table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+th {
+  background: var(--gris-fond);
+  padding: .65rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--texte-2);
+  border-bottom: 2px solid var(--gris-bord);
+}
+td { padding: .7rem 1rem; border-bottom: 1px solid var(--gris-bord); }
+tr:hover td { background: var(--gris-fond); }
+/* ── FOOTER ── */
+footer {
+  margin-top: 3rem;
+  border-top: 1px solid var(--gris-bord);
+  padding: 1.5rem;
+  text-align: center;
+  font-size: .8rem;
+  color: var(--texte-2);
+}
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .grid-2,.grid-3,.grid-4 { grid-template-columns: 1fr; }
+  nav { padding: 0 1rem; }
+  .container { padding: 1.25rem 1rem; }
+  .nav-links a span { display: none; }
+}
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<nav>
+  <a href="{% url 'home' %}" class="nav-logo">
+    <span class="nav-logo-icon">🌾</span>
+    <span>AgriPrix Tchad</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="{% url 'home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>
+      <span>Tableau de bord</span></a></li>
+    <li><a href="{% url 'predict' %}" {% if request.resolver_match.url_name == 'predict' %}class="active"{% endif %}>
+      <span>Prévision</span></a></li>
+    <li><a href="{% url 'historique' %}" {% if request.resolver_match.url_name == 'historique' %}class="active"{% endif %}>
+      <span>Historique</span></a></li>
+    <li><a href="{% url 'aide_sms' %}" {% if request.resolver_match.url_name == 'aide_sms' %}class="active"{% endif %}>
+      <span>SMS</span></a></li>
+  </ul>
+</nav>
+
+{% block content %}{% endblock %}
+
+<footer>
+  AgriPrix &mdash; Wenaklabs
+</footer>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>
