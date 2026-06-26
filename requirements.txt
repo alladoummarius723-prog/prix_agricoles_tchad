@@ -8,3 +8,4 @@ africastalking>=1.2.3
 gunicorn>=21.0
 whitenoise
 dj-database-url
+pyarrow>=16.0.0
