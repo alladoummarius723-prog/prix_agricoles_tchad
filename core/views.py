@@ -9,7 +9,6 @@ from .models import Prediction
 
 
 def home(request):
-    return render(request, "core/home.html")
     """Page d'accueil avec les tendances de prix."""
     tendances = get_tendances(nb_mois=24)
     marches   = get_marches_liste()
@@ -44,7 +43,7 @@ def home(request):
         'nb_marches':     len(marches),
         'nb_predictions': Prediction.objects.count(),
     }
-    return render(request, 'core/home.html', context)
+    return render(request, "core/home.html")
 
 
 def predict_view(request):
