@@ -8,8 +8,8 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-change-this-in-production-xyz123'
-DEBUG = True
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-this-in-production-xyz123')
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
@@ -66,9 +66,17 @@ TIME_ZONE = 'Africa/Ndjamena'
 USE_I18N = True
 USE_TZ = True
 
+# ── Static files ───────────────────────────────────────────
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'core' / 'static']
+
+# Ne pointer que vers des dossiers qui existent réellement
+STATICFILES_DIRS = [
+    d for d in [BASE_DIR / 'core' / 'static']
+    if d.exists()
+]
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -77,19 +85,15 @@ MODELS_DIR = BASE_DIR / 'models_ml'
 DATASET_PATH = BASE_DIR / 'data' / 'dataset_final_cereales_tchad.csv'
 
 # ── Africa's Talking (SMS) ─────────────────────────────────
-AFRICASTALKING_USERNAME = 'sandbox'          # Remplacer en prod
-AFRICASTALKING_API_KEY  = 'votre_cle_api'   # Remplacer en prod
+AFRICASTALKING_USERNAME = os.environ.get('AT_USERNAME', 'sandbox')
+AFRICASTALKING_API_KEY  = os.environ.get('AT_API_KEY', 'votre_cle_api')
 AFRICASTALKING_SHORTCODE = '1234'
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
 }
 
-DEBUG = False
-ALLOWED_HOSTS = ['*']
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-# Pour Railway
+# ── Base de données Railway ────────────────────────────────
 if os.environ.get('DATABASE_URL'):
     import dj_database_url
     DATABASES['default'] = dj_database_url.config()
