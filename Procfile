@@ -1,1 +1,1 @@
-web: gunicorn prix_agricoles_tchad.wsgi --bind 0.0.0.0:$PORT
+web: python manage.py collectstatic --noinput && python manage.py migrate && gunicorn prix_agricoles_tchad.wsgi --bind 0.0.0.0:$PORT
