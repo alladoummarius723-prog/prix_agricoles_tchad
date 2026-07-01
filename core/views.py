@@ -9,6 +9,7 @@ from .models import Prediction
 
 
 def home(request):
+    return render(request, "core/home.html")
     """Page d'accueil avec les tendances de prix."""
     tendances = get_tendances(nb_mois=24)
     marches   = get_marches_liste()
