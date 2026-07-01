@@ -16,6 +16,8 @@ from pathlib import Path
 from django.conf import settings
 import logging
 import datetime
+import warnings
+warnings.filterwarnings("ignore")
 
 logger = logging.getLogger(__name__)
 
