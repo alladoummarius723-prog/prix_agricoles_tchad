@@ -43,7 +43,7 @@ def home(request):
         'nb_marches':     len(marches),
         'nb_predictions': Prediction.objects.count(),
     }
-    return render(request, "core/home.html")
+    return render(request, "core/home.html", context)
 
 
 def predict_view(request):
