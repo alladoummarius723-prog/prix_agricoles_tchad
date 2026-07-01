@@ -16,24 +16,24 @@ def home(request):
     # Stats rapides pour les cartes du dashboard
     from .ml_service import get_dataset
     import numpy as np
-    df = get_dataset()
 
-    stats = []
-    for prod in PRODUITS_VALIDES:
-        sub = df[df['produit'] == prod]['prix_kg_fcfa']
-        if not sub.empty:
-            prix_recent = df[df['produit'] == prod].sort_values(
-                'date_releve')['prix_kg_fcfa'].tail(3).mean()
-            prix_precedent = df[df['produit'] == prod].sort_values(
-                'date_releve')['prix_kg_fcfa'].tail(6).head(3).mean()
-            variation = ((prix_recent - prix_precedent) / prix_precedent * 100
-                         if prix_precedent > 0 else 0)
-            stats.append({
-                'produit':    prod,
-                'prix_moyen': round(prix_recent, 0),
-                'variation':  round(variation, 1),
-                'tendance':   'hausse' if variation > 2 else ('baisse' if variation < -2 else 'stable'),
-            })
+    def get_dataset():
+        global _dataset
+
+    if _dataset is None:
+        try:
+            _charger_dataset()
+            print("Dataset chargé :", _dataset is not None)
+
+            if _dataset is not None:
+                print(_dataset.head())
+                print(_dataset.columns.tolist())
+
+        except Exception as e:
+            print("ERREUR DATASET :", e)
+            raise
+
+    return _dataset
 
     context = {
         'tendances_json': json.dumps(tendances),
