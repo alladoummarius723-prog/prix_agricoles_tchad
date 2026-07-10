@@ -86,7 +86,7 @@ DATASET_PATH = BASE_DIR / 'data' / 'dataset_final_cereales_tchad.csv'
 
 # ── Africa's Talking (SMS) ─────────────────────────────────
 AFRICASTALKING_USERNAME = os.environ.get('AT_USERNAME', 'sandbox')
-AFRICASTALKING_API_KEY  = os.environ.get('AT_API_KEY', 'votre_cle_api')
+AFRICASTALKING_API_KEY  = os.environ.get('AT_API_KEY', 'votre_cle_api').strip()
 AFRICASTALKING_SHORTCODE = '1234'
 
 REST_FRAMEWORK = {
